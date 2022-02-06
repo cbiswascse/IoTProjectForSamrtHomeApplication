@@ -1,0 +1,235 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>IoT - Intrusion Alarm System</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.css}"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+
+    <script type="text/javascript" th:src="@{/js/jquery-3.4.1.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap.js}"></script>
+
+    <style>
+        .container{
+            background-color: #818182;
+        }
+        .jumbotron{
+            background-color: #4e555b;
+            color: #9fcdff;
+        }
+        .table td.fit,
+        .table th.fit{
+            white-space: nowrap;
+            width: 1%;
+        }
+        .btn-squared-default-plain
+        {
+            width: 45px !important;
+            height: 45px !important;
+            font-size: 15px;
+        }
+
+        .btn-squared-default-plain:hover
+        {
+            border: 0px solid white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-header">
+            <div class = "jumbotron">
+                <h3 class = "text-center">IoT - Intrusion Alarm System</h3>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class = "col-lg-6 col-md-6 col-sm-12 col-xs-12">
+                <img th:src="@{/images/CloseDoor.png}" class="w-50" alt="Responsive image" id ="Door" style="padding-left: 30px;"/>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+                <br/><br/>
+                <img th:src="@{/images/GreenLight.png}" class="w-50" alt="Responsive image" id ="AlarmLight" style="padding-left: 30px;"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" >
+                <input type="button" id="withSecurity" onclick="changeNeedSecurity()"  value="Activate Door Security" class="btn btn-danger"/>
+                <input type="button" id="withoutSecurity" onclick="changeNeedSecurity()" style="display: none" value="Deactivate Door Security" class="btn btn-success"/>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                <input type="button" id="onMotionSensor" onclick="changeMotionSensorState(true)" value="Activate Motion Sensor" class="btn btn-danger"/>
+                <input type="button" id="offMotionSensor" onclick="changeMotionSensorState(false)" style="display: none" value="Deactivate Motion Sensor" class="btn btn-success"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12" >
+                <br/>
+                <input type="text" id="pin" name="pin" style="display: none" class="form-control"/><br/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" >
+                <table class = "table" id="checkPin" style="display: none;">
+                    <tbody>
+                    <tr>
+                        <td><a onclick="appendDigit(1)" class="btn btn-squared-default-plain btn-info">1</a></td>
+                        <td><a onclick="appendDigit(2)" class="btn btn-squared-default-plain btn-info">2</a></td>
+                        <td><a onclick="appendDigit(3)" class="btn btn-squared-default-plain btn-info">3</a></td>
+                    </tr>
+                    <tr>
+                        <td><a onclick="appendDigit(4)" class="btn btn-squared-default-plain btn-info">4</a></td>
+                        <td><a onclick="appendDigit(5)" class="btn btn-squared-default-plain btn-info">5</a></td>
+                        <td><a onclick="appendDigit(6)" class="btn btn-squared-default-plain btn-info">6</a></td>
+                    </tr>
+                    <tr>
+                        <td><a onclick="appendDigit(7)" class="btn btn-squared-default-plain btn-info">7</a></td>
+                        <td><a onclick="appendDigit(8)" class="btn btn-squared-default-plain btn-info">8</a></td>
+                        <td><a onclick="appendDigit(9)" class="btn btn-squared-default-plain btn-info">9</a></td>
+                    </tr>
+                    <tr>
+                        <td><a onclick="clearPin()" class="btn btn-squared-default-plain btn-warning">Clr</a></td>
+                        <td><a onclick="appendDigit(0)" class="btn btn-squared-default-plain btn-info">0</a></td>
+                        <td><a href="#" onclick="checkPin()" class="btn btn-squared-default-plain btn-success">Ent</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script type="application/javascript">
+
+    function changeMotionSensorState(on) {
+
+        $('#onMotionSensor').toggle();
+        $('#offMotionSensor').toggle();
+
+        var xmlData = '<MotionSensorRequest>' +
+                '<on>' + on + '</on>' +
+                '</MotionSensorRequest>';
+
+        $.ajax({
+            url: '/iot/change-motion',
+            type: "POST",
+            dataType: "xml",
+            data: xmlData,
+            contentType: "application/xml",
+            success: function (xmlData) {
+
+            }
+        });
+
+    }
+
+    function appendDigit(digit) {
+        var currentText = $('#pin').val();
+        currentText = currentText + digit;
+        $('#pin').val(currentText);
+    }
+
+    function clearPin() {
+        $('#pin').val("");
+    }
+
+    function checkPin() {
+
+        var xmlData = '<SecurityDoorRequest>' +
+                            '<securityNeed>true</securityNeed>' +
+                            '<doorPin>' + $('#pin').val() + '</doorPin>' +
+                      '</SecurityDoorRequest>';
+
+        $.ajax({
+            url: '/iot/check-security',
+            type: "POST",
+            dataType: "xml",
+            data: xmlData,
+            contentType: "application/xml",
+            success: function (xmlData) {
+                $(xmlData).find("ResponseData").each(function () {
+                    var totalPerson = $(this).find('totalPeople').text();
+                    $('#totalPeople').html(totalPerson);
+                });
+            }
+        });
+
+    }
+
+    var needSecurity = false;
+
+    function changeNeedSecurity() {
+
+        $('#pin').toggle();
+        $('#withoutSecurity').toggle();
+        $('#withSecurity').toggle();
+        $('#checkPin').toggle();
+
+        needSecurity = !needSecurity;
+
+        var xmlData = '<SecurityDoorRequest>' +
+                        '<securityNeed>' + needSecurity + '</securityNeed>' +
+                      '</SecurityDoorRequest>';
+
+        $.ajax({
+            url: '/iot/check-security',
+            type: "POST",
+            dataType: "xml",
+            data: xmlData,
+            contentType: "application/xml",
+            success: function (xmlData) {
+                $(xmlData).find("ResponseData").each(function () {
+                    var totalPerson = $(this).find('totalPeople').text();
+                    $('#totalPeople').html(totalPerson);
+                });
+            }
+        });
+
+    }
+
+    function getContinuouslyAllData() {
+
+        $.ajax({
+            url: '/iot/get-data',
+            type: "GET",
+            dataType: "xml",
+            contentType: "application/xml",
+            success: function (xmlData) {
+
+                $(xmlData).find("ResponseData").each(function () {
+                    let isAlarmOn = $(this).find('alarm').text();
+                    let isDoorOpen = $(this).find('doorOpen').text();
+                    // console.log(isAlarmOn);
+
+                    console.log(isDoorOpen);
+                    if(isAlarmOn == 'true'){
+                        document.getElementById("AlarmLight").src = "/images/RedLight.png";
+                    }
+                    else{
+                        document.getElementById("AlarmLight").src = "/images/GreenLight.png";
+                    }
+
+                    if(isDoorOpen == 'true'){
+                        document.getElementById("Door").src = "/images/OpenDoor.png";
+                    }
+                    else{
+                        document.getElementById("Door").src = "/images/CloseDoor.png";
+                    }
+
+                });
+
+            }
+        });
+    }
+
+    setInterval(getContinuouslyAllData, 3000);
+
+</script>
+</html>
